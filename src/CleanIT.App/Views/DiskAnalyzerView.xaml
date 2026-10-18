@@ -92,18 +92,34 @@
                             Command="{Binding ShowInExplorerCommand}" CommandParameter="{Binding SelectedFile.FullPath}" />
                     <TextBlock Text="Les 50 plus gros fichiers" Style="{StaticResource Title}" VerticalAlignment="Center" Margin="0" />
                 </DockPanel>
-                <ListView ItemsSource="{Binding LargestFiles}" SelectedItem="{Binding SelectedFile}" BorderThickness="0">
+                <TextBlock DockPanel.Dock="Top" Text="Cliquez sur un en-tête de colonne pour trier (un second clic inverse l'ordre)."
+                           Style="{StaticResource Muted}" FontSize="11" Margin="8,0,8,6" />
+                <ListView ItemsSource="{Binding LargestFilesView}" SelectedItem="{Binding SelectedFile}" BorderThickness="0">
                     <ListView.View>
                         <GridView>
-                            <GridViewColumn Header="Taille" Width="85">
+                            <GridViewColumn Width="90">
+                                <GridViewColumn.Header>
+                                    <GridViewColumnHeader Content="{Binding SizeHeader}" Command="{Binding SortFilesCommand}"
+                                                          CommandParameter="SizeBytes" ToolTip="Trier par taille" />
+                                </GridViewColumn.Header>
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{Binding SizeBytes, Converter={StaticResource ByteSize}}" FontWeight="SemiBold" />
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
-                            <GridViewColumn Header="Modifié le" Width="90" DisplayMemberBinding="{Binding LastWriteUtc, StringFormat=d}" />
-                            <GridViewColumn Header="Chemin" Width="420" DisplayMemberBinding="{Binding FullPath}" />
+                            <GridViewColumn Width="125" DisplayMemberBinding="{Binding LastWriteUtc, Converter={StaticResource LocalDateTime}}">
+                                <GridViewColumn.Header>
+                                    <GridViewColumnHeader Content="{Binding DateHeader}" Command="{Binding SortFilesCommand}"
+                                                          CommandParameter="LastWriteUtc" ToolTip="Trier par date de modification" />
+                                </GridViewColumn.Header>
+                            </GridViewColumn>
+                            <GridViewColumn Width="420" DisplayMemberBinding="{Binding FullPath}">
+                                <GridViewColumn.Header>
+                                    <GridViewColumnHeader Content="{Binding PathHeader}" Command="{Binding SortFilesCommand}"
+                                                          CommandParameter="FullPath" ToolTip="Trier par chemin" />
+                                </GridViewColumn.Header>
+                            </GridViewColumn>
                         </GridView>
                     </ListView.View>
                 </ListView>

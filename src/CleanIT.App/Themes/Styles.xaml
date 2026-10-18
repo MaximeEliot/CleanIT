@@ -25,6 +25,7 @@
     <conv:BoolToVisibilityConverter x:Key="BoolToVisible" />
     <conv:BoolToVisibilityConverter x:Key="BoolToCollapsed" Invert="True" />
     <conv:InverseBooleanConverter x:Key="Not" />
+    <conv:LocalDateTimeConverter x:Key="LocalDateTime" />
 
     <Style TargetType="{x:Type Window}" x:Key="AppWindow">
         <Setter Property="FontFamily" Value="Segoe UI" />

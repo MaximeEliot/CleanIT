@@ -39,6 +39,18 @@ public sealed class BoolToVisibilityConverter : IValueConverter
         throw new NotSupportedException();
 }
 
+/// <summary>UTC DateTime → local "dd/MM/yyyy HH:mm".</summary>
+public sealed class LocalDateTimeConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) =>
+        value is DateTime { Ticks: > 0 } utc
+            ? DateTime.SpecifyKind(utc, DateTimeKind.Utc).ToLocalTime().ToString("dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture)
+            : string.Empty;
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}
+
 public sealed class InverseBooleanConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => value is not true;

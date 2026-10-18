@@ -1,6 +1,8 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
+using System.Windows.Data;
 using CleanIT.App.Logging;
 using CleanIT.App.Services;
 using CleanIT.Core.Abstractions;
@@ -38,6 +40,14 @@ public sealed partial class DiskAnalyzerViewModel : ObservableObject
     [ObservableProperty]
     private FileEntry? _selectedFile;
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SizeHeader), nameof(DateHeader), nameof(PathHeader))]
+    private string _sortProperty = nameof(FileEntry.SizeBytes);
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SizeHeader), nameof(DateHeader), nameof(PathHeader))]
+    private bool _sortDescending = true;
+
     public DiskAnalyzerViewModel(DiskAnalyzer analyzer, IEnvironmentInfo environment, IDialogService dialogs, ILogger<DiskAnalyzerViewModel> logger)
     {
         ArgumentNullException.ThrowIfNull(environment);
@@ -49,6 +59,8 @@ public sealed partial class DiskAnalyzerViewModel : ObservableObject
             .Where(d => d.DriveType is DriveType.Fixed or DriveType.Removable && d.IsReady)
             .Select(d => d.RootDirectory.FullName)
             .ToList();
+        LargestFilesView = CollectionViewSource.GetDefaultView(LargestFiles);
+        ApplySort();
     }
 
     public IReadOnlyList<string> Drives { get; }
@@ -56,6 +68,53 @@ public sealed partial class DiskAnalyzerViewModel : ObservableObject
     public ObservableCollection<DirectoryNodeViewModel> Tree { get; } = [];
 
     public ObservableCollection<FileEntry> LargestFiles { get; } = [];
+
+    /// <summary>Sorted view of <see cref="LargestFiles"/> bound to the list.</summary>
+    public ICollectionView LargestFilesView { get; }
+
+    public string SizeHeader => Header("Taille", nameof(FileEntry.SizeBytes));
+
+    public string DateHeader => Header("Modifié le", nameof(FileEntry.LastWriteUtc));
+
+    public string PathHeader => Header("Chemin", nameof(FileEntry.FullPath));
+
+    /// <summary>
+    /// Sorts the largest files by the given column. Clicking the active column again reverses the order;
+    /// a new column starts descending (biggest / most recent first), except the path which starts A→Z.
+    /// </summary>
+    [RelayCommand]
+    private void SortFiles(string? property)
+    {
+        if (property is not (nameof(FileEntry.SizeBytes) or nameof(FileEntry.LastWriteUtc) or nameof(FileEntry.FullPath)))
+        {
+            return;
+        }
+
+        if (property == SortProperty)
+        {
+            SortDescending = !SortDescending;
+        }
+        else
+        {
+            SortProperty = property;
+            SortDescending = property != nameof(FileEntry.FullPath);
+        }
+
+        ApplySort();
+    }
+
+    private void ApplySort()
+    {
+        using (LargestFilesView.DeferRefresh())
+        {
+            LargestFilesView.SortDescriptions.Clear();
+            LargestFilesView.SortDescriptions.Add(new SortDescription(
+                SortProperty, SortDescending ? ListSortDirection.Descending : ListSortDirection.Ascending));
+        }
+    }
+
+    private string Header(string label, string property) =>
+        property == SortProperty ? label + (SortDescending ? " ▼" : " ▲") : label;
 
     private bool CanAnalyze() => !IsBusy && !string.IsNullOrWhiteSpace(RootPath);
 
