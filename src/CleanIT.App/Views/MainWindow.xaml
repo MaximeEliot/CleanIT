@@ -39,6 +39,9 @@
             <TabItem Header="Nettoyage">
                 <views:CleanupView DataContext="{Binding Cleanup}" Margin="0,12,0,0" />
             </TabItem>
+            <TabItem Header="Analyseur d'espace">
+                <views:DiskAnalyzerView DataContext="{Binding DiskAnalyzer}" Margin="0,12,0,0" />
+            </TabItem>
         </TabControl>
     </DockPanel>
 </Window>
