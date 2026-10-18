@@ -3,8 +3,8 @@
   <PropertyGroup>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
-    <!-- xUnit test method names use underscores by convention. -->
-    <NoWarn>$(NoWarn);CA1707</NoWarn>
+    <!-- CA1707: xUnit test names use underscores. CA1861: inline expected arrays keep assertions readable. -->
+    <NoWarn>$(NoWarn);CA1707;CA1861</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

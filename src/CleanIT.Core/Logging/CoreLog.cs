@@ -51,4 +51,20 @@ internal static partial class CoreLog
 
     [LoggerMessage(2006, LogLevel.Debug, "Directory not removed {Path}: {Message}")]
     public static partial void DirectoryNotRemoved(this ILogger logger, string path, string message);
+
+    // --- Disk analysis (3xxx) ------------------------------------------------------------
+
+    [LoggerMessage(3000, LogLevel.Information, "Disk analysis started on {Root}")]
+    public static partial void DiskAnalysisStarted(this ILogger logger, string root);
+
+    [LoggerMessage(3001, LogLevel.Information, "Disk analysis of {Root} finished: {Bytes} bytes, {FileCount} files, {Inaccessible} inaccessible directories")]
+    public static partial void DiskAnalysisFinished(this ILogger logger, string root, long bytes, long fileCount, int inaccessible);
+
+    // --- Settings (4xxx) -----------------------------------------------------------------
+
+    [LoggerMessage(4000, LogLevel.Warning, "Settings file {Path} could not be read; defaults used")]
+    public static partial void SettingsUnreadable(this ILogger logger, Exception exception, string path);
+
+    [LoggerMessage(4001, LogLevel.Error, "Settings file {Path} could not be saved")]
+    public static partial void SettingsNotSaved(this ILogger logger, Exception exception, string path);
 }
