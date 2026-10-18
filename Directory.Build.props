@@ -13,5 +13,11 @@
     <Version>1.0.0</Version>
     <NeutralLanguage>fr-FR</NeutralLanguage>
     <SatelliteResourceLanguages>fr</SatelliteResourceLanguages>
+    <!-- Only CleanIT.App opts back in, so that "dotnet publish" on the solution produces the single executable. -->
+    <IsPublishable>false</IsPublishable>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <DebugType>embedded</DebugType>
   </PropertyGroup>
 </Project>
