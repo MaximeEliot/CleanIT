@@ -1,4 +1,6 @@
 using System.IO.Abstractions.TestingHelpers;
+using CleanIT.Core.Abstractions;
+using CleanIT.Core.Cleaning;
 using CleanIT.Core.Safety;
 using CleanIT.Core.Scanning;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -32,6 +34,15 @@ internal sealed class TestHost
 
     public ScanEngine CreateScanEngine() =>
         new(FileSystem, Environment, Policy, Time, NullLogger<ScanEngine>.Instance);
+
+    public CleanupEngine CreateCleanupEngine(FakeRecycleBinDeleter? recycle = null, params ICleanerRule[] rules) =>
+        new(
+            FileSystem,
+            Environment,
+            Policy,
+            [recycle ?? new FakeRecycleBinDeleter(FileSystem), new PermanentFileDeleter(FileSystem)],
+            rules,
+            NullLogger<CleanupEngine>.Instance);
 
     public void AddFile(string path, int size = 100, DateTime? lastWriteUtc = null)
     {

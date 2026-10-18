@@ -28,4 +28,27 @@ internal static partial class CoreLog
 
     [LoggerMessage(1005, LogLevel.Debug, "Inaccessible {Path}: {Error}")]
     public static partial void Inaccessible(this ILogger logger, string path, string? error);
+
+    // --- Cleanup (2xxx) ------------------------------------------------------------------
+
+    [LoggerMessage(2000, LogLevel.Information, "Cleanup started: mode {Mode}, {CategoryCount} categories, report {ReportId}")]
+    public static partial void CleanupStarted(this ILogger logger, CleanupMode mode, int categoryCount, Guid reportId);
+
+    [LoggerMessage(2001, LogLevel.Information, "Cleanup finished: mode {Mode}, {ItemCount} items, {Bytes} bytes, {ErrorCount} errors, cancelled: {Cancelled}")]
+    public static partial void CleanupFinished(this ILogger logger, CleanupMode mode, long itemCount, long bytes, int errorCount, bool cancelled);
+
+    [LoggerMessage(2002, LogLevel.Information, "Deleted {Path} ({Bytes} bytes, {Mode})")]
+    public static partial void Deleted(this ILogger logger, string path, long bytes, CleanupMode mode);
+
+    [LoggerMessage(2003, LogLevel.Information, "[DRY-RUN] Would delete {Path} ({Bytes} bytes)")]
+    public static partial void WouldDelete(this ILogger logger, string path, long bytes);
+
+    [LoggerMessage(2004, LogLevel.Warning, "Not deleted {Path}: {Kind} - {Message}")]
+    public static partial void DeletionFailed(this ILogger logger, string path, CleanupErrorKind kind, string message);
+
+    [LoggerMessage(2005, LogLevel.Error, "Custom rule {RuleId} failed")]
+    public static partial void CustomRuleFailed(this ILogger logger, Exception exception, string ruleId);
+
+    [LoggerMessage(2006, LogLevel.Debug, "Directory not removed {Path}: {Message}")]
+    public static partial void DirectoryNotRemoved(this ILogger logger, string path, string message);
 }
