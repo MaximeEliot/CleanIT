@@ -18,4 +18,10 @@ public class ByteSizeFormatterTests
     {
         Assert.Equal(expected, ByteSizeFormatter.Format(bytes));
     }
+
+    [Fact]
+    public void FrenchCulture_UsesRegularNoBreakSpaceAsThousandsSeparator()
+    {
+        Assert.Equal("1 984", 1984.ToString("N0", FrenchCulture.Instance));
+    }
 }

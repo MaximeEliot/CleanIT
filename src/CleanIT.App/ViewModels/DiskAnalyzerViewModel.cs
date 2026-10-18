@@ -15,7 +15,7 @@ namespace CleanIT.App.ViewModels;
 /// <summary>"Analyseur d'espace" tab. Strictly read-only: nothing can be deleted from here.</summary>
 public sealed partial class DiskAnalyzerViewModel : ObservableObject
 {
-    private static readonly CultureInfo French = CultureInfo.GetCultureInfo("fr-FR");
+    private static readonly CultureInfo French = FrenchCulture.Instance;
 
     private readonly DiskAnalyzer _analyzer;
     private readonly IDialogService _dialogs;

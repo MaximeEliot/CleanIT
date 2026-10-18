@@ -5,7 +5,7 @@ namespace CleanIT.Core.Formatting;
 /// <summary>Human readable sizes in French ("1,5 Go", "320 Mo", "512 octets").</summary>
 public static class ByteSizeFormatter
 {
-    private static readonly CultureInfo French = CultureInfo.GetCultureInfo("fr-FR");
+    private static readonly CultureInfo French = FrenchCulture.Instance;
     private static readonly string[] Units = ["octets", "Ko", "Mo", "Go", "To", "Po"];
 
     public static string Format(long bytes)

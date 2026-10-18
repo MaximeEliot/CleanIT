@@ -60,7 +60,7 @@ public sealed partial class RuleItemViewModel : ObservableObject
     public string SizeText => Result is { Availability.IsAvailable: true } r ? ByteSizeFormatter.Format(r.TotalBytes) : string.Empty;
 
     public string CountText => Result is { Availability.IsAvailable: true } r
-        ? string.Format(CultureInfo.GetCultureInfo("fr-FR"), "{0:N0} élément(s)", r.ItemCount)
+        ? string.Format(FrenchCulture.Instance, "{0:N0} élément(s)", r.ItemCount)
         : string.Empty;
 
     /// <summary>Short status shown under the name: availability problem, or "non analysé".</summary>
@@ -75,7 +75,7 @@ public sealed partial class RuleItemViewModel : ObservableObject
     public IReadOnlyList<CleanupItem> TopItems => Result?.Items.OrderByDescending(i => i.SizeBytes).Take(MaxDetailItems).ToList() ?? [];
 
     public string SkippedText => Result is { SkippedCount: > 0 } r
-        ? string.Format(CultureInfo.GetCultureInfo("fr-FR"), "{0:N0} élément(s) ignoré(s) (protégés, exclus, récents, verrouillés ou inaccessibles).", r.SkippedCount)
+        ? string.Format(FrenchCulture.Instance, "{0:N0} élément(s) ignoré(s) (protégés, exclus, récents, verrouillés ou inaccessibles).", r.SkippedCount)
         : string.Empty;
 
     partial void OnIsSelectedChanged(bool value) => _selectionChanged(this);

@@ -47,11 +47,11 @@ public sealed partial class DirectoryNodeViewModel : ObservableObject
     /// <summary>Share of the parent folder, 0-100.</summary>
     public double Percent => _parentSize <= 0 ? 100 : 100.0 * SizeBytes / _parentSize;
 
-    public string PercentText => _node is null ? string.Empty : Percent.ToString("0.0", CultureInfo.GetCultureInfo("fr-FR")) + " %";
+    public string PercentText => _node is null ? string.Empty : Percent.ToString("0.0", FrenchCulture.Instance) + " %";
 
     public string FileCountText => _node is null
         ? string.Empty
-        : string.Format(CultureInfo.GetCultureInfo("fr-FR"), "{0:N0} fichier(s)", _node.FileCount);
+        : string.Format(FrenchCulture.Instance, "{0:N0} fichier(s)", _node.FileCount);
 
     public string? Warning => _node switch
     {

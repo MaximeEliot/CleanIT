@@ -8,7 +8,7 @@ namespace CleanIT.App.ViewModels;
 /// <summary>Final summary of a cleanup or a simulation.</summary>
 public sealed class CleanupSummaryViewModel
 {
-    private static readonly CultureInfo French = CultureInfo.GetCultureInfo("fr-FR");
+    private static readonly CultureInfo French = FrenchCulture.Instance;
 
     public CleanupSummaryViewModel(CleanupResult result)
     {

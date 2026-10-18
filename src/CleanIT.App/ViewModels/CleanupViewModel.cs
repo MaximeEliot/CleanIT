@@ -24,7 +24,7 @@ namespace CleanIT.App.ViewModels;
 /// </summary>
 public sealed partial class CleanupViewModel : ObservableObject
 {
-    private static readonly CultureInfo French = CultureInfo.GetCultureInfo("fr-FR");
+    private static readonly CultureInfo French = FrenchCulture.Instance;
 
     private readonly ScanEngine _scanEngine;
     private readonly CleanupEngine _cleanupEngine;
