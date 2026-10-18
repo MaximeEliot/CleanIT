@@ -23,7 +23,7 @@ public partial class MainWindow : Window
         ArgumentNullException.ThrowIfNull(e);
         if (_viewModel.IsBusy)
         {
-            if (!_dialogs.Confirm("Quitter CleanIT", "Une opération est en cours. Voulez-vous l'annuler et quitter ?", isWarning: true))
+            if (!_dialogs.Confirm("Quitter CleanIT", "Une opération est en cours. Voulez-vous l'annuler et quitter ?", isWarning: true, confirmLabel: "Quitter", cancelLabel: "Rester"))
             {
                 e.Cancel = true;
                 return;

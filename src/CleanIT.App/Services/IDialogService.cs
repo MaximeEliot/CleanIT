@@ -3,8 +3,11 @@ namespace CleanIT.App.Services;
 /// <summary>Modal dialogs, abstracted so view models stay free of WPF windows.</summary>
 public interface IDialogService
 {
-    /// <summary>Yes/No question; "No" is the default button.</summary>
-    bool Confirm(string title, string message, bool isWarning = false);
+    /// <summary>
+    /// Explicit confirmation. Cancel is the default (Enter/Escape) and the confirm button
+    /// only becomes clickable after a short delay. Returns true only on an explicit click.
+    /// </summary>
+    bool Confirm(string title, string message, bool isWarning = false, string confirmLabel = "Confirmer", string cancelLabel = "Annuler");
 
     void ShowInfo(string title, string message);
 

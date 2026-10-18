@@ -62,7 +62,8 @@ public sealed partial class SettingsViewModel : ObservableObject
         if (value && !_dialogs.Confirm(
                 "Suppression définitive",
                 "Avec cette option, les fichiers ne passeront plus par la corbeille : ils seront supprimés définitivement et ne pourront pas être restaurés.\n\nActiver la suppression définitive ?",
-                isWarning: true))
+                isWarning: true,
+                confirmLabel: "Activer"))
         {
             _loading = true;
             PermanentDeletion = false;

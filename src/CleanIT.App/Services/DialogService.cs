@@ -1,4 +1,5 @@
 using System.Windows;
+using CleanIT.App.Views;
 using Microsoft.Win32;
 
 namespace CleanIT.App.Services;
@@ -7,13 +8,19 @@ public sealed class DialogService : IDialogService
 {
     private static Window? Owner => Application.Current?.MainWindow is { IsLoaded: true } window ? window : null;
 
-    public bool Confirm(string title, string message, bool isWarning = false)
+    public bool Confirm(string title, string message, bool isWarning = false, string confirmLabel = "Confirmer", string cancelLabel = "Annuler")
     {
-        var icon = isWarning ? MessageBoxImage.Warning : MessageBoxImage.Question;
-        var result = Owner is { } owner
-            ? MessageBox.Show(owner, message, title, MessageBoxButton.YesNo, icon, MessageBoxResult.No)
-            : MessageBox.Show(message, title, MessageBoxButton.YesNo, icon, MessageBoxResult.No);
-        return result == MessageBoxResult.Yes;
+        var dialog = new ConfirmDialog(title, message, confirmLabel, cancelLabel, isWarning);
+        if (Owner is { } owner)
+        {
+            dialog.Owner = owner;
+        }
+        else
+        {
+            dialog.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+        }
+
+        return dialog.ShowDialog() == true;
     }
 
     public void ShowInfo(string title, string message) => Show(title, message, MessageBoxImage.Information);

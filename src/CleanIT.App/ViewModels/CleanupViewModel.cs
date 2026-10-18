@@ -162,7 +162,9 @@ public sealed partial class CleanupViewModel : ObservableObject
             var restart = _dialogs.Confirm(
                 "Droits administrateur requis",
                 "Ces catégories nécessitent les droits administrateur :\n" + names
-                + "\n\nRelancer CleanIT en tant qu'administrateur ?\n\n(Non : l'analyse continue sans ces catégories.)");
+                + "\n\nRelancer CleanIT en tant qu'administrateur ?\n\n(« Continuer sans » : l'analyse se fait sans ces catégories.)",
+                confirmLabel: "Relancer en administrateur",
+                cancelLabel: "Continuer sans");
             if (restart && _elevation.RestartElevated(selected.Select(r => r.Id)))
             {
                 return;
@@ -245,7 +247,7 @@ public sealed partial class CleanupViewModel : ObservableObject
         if (mode != CleanupMode.DryRun)
         {
             var dangerous = mode == CleanupMode.Permanent || categories.Any(c => c.Result!.IsCustom);
-            confirmed = _dialogs.Confirm("Confirmer le nettoyage", BuildConfirmation(categories, mode), dangerous);
+            confirmed = _dialogs.Confirm("Confirmer le nettoyage", BuildConfirmation(categories, mode), dangerous, confirmLabel: "Nettoyer");
             if (!confirmed)
             {
                 StatusText = "Nettoyage annulé : rien n'a été supprimé.";
