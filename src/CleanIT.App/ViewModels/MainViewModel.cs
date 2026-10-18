@@ -5,11 +5,12 @@ namespace CleanIT.App.ViewModels;
 
 public sealed partial class MainViewModel : ObservableObject
 {
-    public MainViewModel(IElevationService elevation, CleanupViewModel cleanup, DiskAnalyzerViewModel diskAnalyzer)
+    public MainViewModel(IElevationService elevation, CleanupViewModel cleanup, DiskAnalyzerViewModel diskAnalyzer, SettingsViewModel settings)
     {
         IsElevated = elevation.IsElevated;
         Cleanup = cleanup;
         DiskAnalyzer = diskAnalyzer;
+        Settings = settings;
     }
 
     public bool IsElevated { get; }
@@ -17,6 +18,8 @@ public sealed partial class MainViewModel : ObservableObject
     public CleanupViewModel Cleanup { get; }
 
     public DiskAnalyzerViewModel DiskAnalyzer { get; }
+
+    public SettingsViewModel Settings { get; }
 
     public string Title => IsElevated ? "CleanIT — Administrateur" : "CleanIT";
 

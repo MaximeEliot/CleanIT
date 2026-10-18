@@ -42,6 +42,9 @@
             <TabItem Header="Analyseur d'espace">
                 <views:DiskAnalyzerView DataContext="{Binding DiskAnalyzer}" Margin="0,12,0,0" />
             </TabItem>
+            <TabItem Header="Paramètres">
+                <views:SettingsView DataContext="{Binding Settings}" Margin="0,12,0,0" />
+            </TabItem>
         </TabControl>
     </DockPanel>
 </Window>

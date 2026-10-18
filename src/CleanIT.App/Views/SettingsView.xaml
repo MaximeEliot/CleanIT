@@ -1,0 +1,86 @@
+<UserControl x:Class="CleanIT.App.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:CleanIT.App.ViewModels"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=vm:SettingsViewModel}"
+             d:DesignWidth="1000" d:DesignHeight="600">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="12" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Exclusions -->
+        <Border Style="{StaticResource Card}">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Top">
+                    <TextBlock Text="Exclusions" Style="{StaticResource Title}" />
+                    <TextBlock Style="{StaticResource Muted}" Margin="0,0,0,10"
+                               Text="Ces dossiers, fichiers ou motifs ne seront jamais supprimés. Un dossier exclu protège tout son contenu." />
+                </StackPanel>
+                <StackPanel DockPanel.Dock="Bottom" Margin="0,10,0,0">
+                    <DockPanel>
+                        <Button DockPanel.Dock="Right" Content="Ajouter le motif" Command="{Binding AddPatternCommand}" />
+                        <TextBox Text="{Binding NewPattern, UpdateSourceTrigger=PropertyChanged}" VerticalContentAlignment="Center" Padding="4"
+                                 AutomationProperties.Name="Motif ou chemin à exclure" />
+                    </DockPanel>
+                    <TextBlock Style="{StaticResource Muted}" FontSize="11" Margin="0,4,0,8"
+                               Text="Exemples : *.docx, rapport*.pdf ou un chemin complet comme D:\Projets" />
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Ajouter un dossier…" Command="{Binding AddFolderCommand}" />
+                        <Button Content="Retirer" Command="{Binding RemoveExclusionCommand}" />
+                    </StackPanel>
+                </StackPanel>
+                <ListBox ItemsSource="{Binding Exclusions}" SelectedItem="{Binding SelectedExclusion}" MinHeight="120" />
+            </DockPanel>
+        </Border>
+
+        <!-- Behaviour -->
+        <StackPanel Grid.Column="2">
+            <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                <StackPanel>
+                    <TextBlock Text="Suppression" Style="{StaticResource Title}" />
+                    <CheckBox IsChecked="{Binding PermanentDeletion}" FontWeight="SemiBold"
+                              Content="Supprimer définitivement (sans passer par la corbeille)" />
+                    <TextBlock Style="{StaticResource Muted}" Margin="22,4,0,0"
+                               Text="Désactivé par défaut : les fichiers nettoyés vont dans la corbeille et peuvent être restaurés. Les chemins de plus de 260 caractères ne peuvent être traités qu'en suppression définitive." />
+                    <Border Background="{StaticResource DangerLightBrush}" CornerRadius="6" Padding="10,6" Margin="0,10,0,0"
+                            Visibility="{Binding PermanentDeletion, Converter={StaticResource BoolToVisible}}">
+                        <TextBlock Foreground="{StaticResource DangerBrush}" TextWrapping="Wrap"
+                                   Text="Suppression définitive activée : les fichiers supprimés ne pourront pas être récupérés." />
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                <StackPanel>
+                    <TextBlock Text="Fichiers temporaires" Style="{StaticResource Title}" />
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Conserver les fichiers modifiés depuis moins de" VerticalAlignment="Center" />
+                        <TextBox Text="{Binding MinimumTempFileAgeHours, UpdateSourceTrigger=LostFocus}" Width="50" Margin="8,0" Padding="2"
+                                 HorizontalContentAlignment="Right" AutomationProperties.Name="Âge minimal en heures" />
+                        <TextBlock Text="heure(s)" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <TextBlock Style="{StaticResource Muted}" Margin="0,6,0,0"
+                               Text="Les fichiers récents peuvent encore être utilisés par un programme ou une installation en cours (24 h recommandé, 0 pour désactiver)." />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="Journal et configuration" Style="{StaticResource Title}" />
+                    <TextBlock Style="{StaticResource Muted}" Text="Chaque analyse, suppression et erreur est enregistrée dans un journal (rotation quotidienne, 14 jours conservés)." />
+                    <TextBlock Style="{StaticResource Muted}" Margin="0,6,0,0">
+                        <Run Text="Paramètres :" />
+                        <Run Text="{Binding Source={x:Static vm:SettingsViewModel.SettingsFilePath}, Mode=OneWay}" />
+                    </TextBlock>
+                    <Button Content="Ouvrir le dossier des journaux" Command="{Binding OpenLogFolderCommand}" HorizontalAlignment="Left" Margin="0,10,0,0" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </Grid>
+</UserControl>

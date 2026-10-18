@@ -48,6 +48,7 @@ internal static class ServiceRegistration
         services.AddSingleton<IElevationService, ElevationService>();
         services.AddSingleton<CleanupViewModel>();
         services.AddSingleton<DiskAnalyzerViewModel>();
+        services.AddSingleton<SettingsViewModel>();
         services.AddSingleton<MainViewModel>();
         services.AddSingleton<MainWindow>();
 
