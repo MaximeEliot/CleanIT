@@ -1,13 +1,37 @@
+using System.ComponentModel;
 using System.Windows;
+using CleanIT.App.Services;
 using CleanIT.App.ViewModels;
 
 namespace CleanIT.App.Views;
 
 public partial class MainWindow : Window
 {
-    public MainWindow(MainViewModel viewModel)
+    private readonly MainViewModel _viewModel;
+    private readonly IDialogService _dialogs;
+
+    public MainWindow(MainViewModel viewModel, IDialogService dialogs)
     {
         InitializeComponent();
+        _viewModel = viewModel;
+        _dialogs = dialogs;
         DataContext = viewModel;
+    }
+
+    protected override void OnClosing(CancelEventArgs e)
+    {
+        ArgumentNullException.ThrowIfNull(e);
+        if (_viewModel.IsBusy)
+        {
+            if (!_dialogs.Confirm("Quitter CleanIT", "Une opération est en cours. Voulez-vous l'annuler et quitter ?", isWarning: true))
+            {
+                e.Cancel = true;
+                return;
+            }
+
+            _viewModel.CancelAll();
+        }
+
+        base.OnClosing(e);
     }
 }

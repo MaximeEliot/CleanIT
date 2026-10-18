@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:CleanIT.App.ViewModels"
         xmlns:app="clr-namespace:CleanIT.App"
+        xmlns:views="clr-namespace:CleanIT.App.Views"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=vm:MainViewModel}"
         Style="{StaticResource AppWindow}"
@@ -34,6 +35,10 @@
             </TextBlock>
         </Border>
 
-        <TabControl x:Name="Tabs" Margin="16,12,16,8" Background="Transparent" BorderThickness="0" />
+        <TabControl x:Name="Tabs" Margin="16,12,16,8" Background="Transparent" BorderThickness="0">
+            <TabItem Header="Nettoyage">
+                <views:CleanupView DataContext="{Binding Cleanup}" Margin="0,12,0,0" />
+            </TabItem>
+        </TabControl>
     </DockPanel>
 </Window>

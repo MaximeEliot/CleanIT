@@ -46,6 +46,7 @@ internal static class ServiceRegistration
         services.AddSingleton<SettingsService>();
         services.AddSingleton<IDialogService, DialogService>();
         services.AddSingleton<IElevationService, ElevationService>();
+        services.AddSingleton<CleanupViewModel>();
         services.AddSingleton<MainViewModel>();
         services.AddSingleton<MainWindow>();
 

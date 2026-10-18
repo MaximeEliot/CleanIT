@@ -1,0 +1,185 @@
+<UserControl x:Class="CleanIT.App.Views.CleanupView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:CleanIT.App.ViewModels"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=vm:CleanupViewModel}"
+             d:DesignWidth="1000" d:DesignHeight="600">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="5*" MinWidth="340" />
+            <ColumnDefinition Width="12" />
+            <ColumnDefinition Width="6*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Categories -->
+        <Border Style="{StaticResource Card}" Padding="8">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top" Text="Catégories à analyser" Style="{StaticResource Title}" Margin="8,4,8,8" />
+                <TextBlock DockPanel.Dock="Bottom" Text="{Binding TotalSelectedText}" FontWeight="SemiBold" Margin="8,8,8,4"
+                           TextWrapping="Wrap" Foreground="{StaticResource AccentBrush}"
+                           Visibility="{Binding HasReport, Converter={StaticResource BoolToVisible}}" />
+                <ListBox ItemsSource="{Binding RulesView}" SelectedItem="{Binding SelectedRule}" BorderThickness="0"
+                         IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled" HorizontalContentAlignment="Stretch">
+                    <ListBox.GroupStyle>
+                        <GroupStyle>
+                            <GroupStyle.HeaderTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" Foreground="{StaticResource MutedTextBrush}"
+                                               Margin="6,10,0,2" FontSize="12" />
+                                </DataTemplate>
+                            </GroupStyle.HeaderTemplate>
+                        </GroupStyle>
+                    </ListBox.GroupStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate DataType="{x:Type vm:RuleItemViewModel}">
+                            <Grid Margin="2,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <CheckBox IsChecked="{Binding IsSelected}" IsEnabled="{Binding IsSelectable}" VerticalAlignment="Top"
+                                          Margin="0,2,8,0" AutomationProperties.Name="{Binding DisplayName}" />
+                                <StackPanel Grid.Column="1">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" />
+                                        <Border Style="{StaticResource Badge}" Visibility="{Binding RequiresElevation, Converter={StaticResource BoolToVisible}}">
+                                            <TextBlock Text="Admin" FontSize="11" Foreground="{StaticResource WarningBrush}" />
+                                        </Border>
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding StatusText}" Style="{StaticResource Muted}" FontSize="12" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" HorizontalAlignment="Right" Margin="8,0,4,0">
+                                    <TextBlock Text="{Binding SizeText}" FontWeight="SemiBold" HorizontalAlignment="Right" />
+                                    <TextBlock Text="{Binding CountText}" Style="{StaticResource Muted}" FontSize="11" HorizontalAlignment="Right" />
+                                </StackPanel>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+        </Border>
+
+        <!-- Details of the selected category (hidden while a summary is shown) -->
+        <Border Grid.Column="2" Style="{StaticResource Card}"
+                Visibility="{Binding Summary, Converter={StaticResource NullToVisible}}">
+            <DockPanel DataContext="{Binding SelectedRule}">
+                <StackPanel DockPanel.Dock="Top">
+                    <TextBlock Text="{Binding DisplayName}" Style="{StaticResource Title}" />
+                    <TextBlock Text="{Binding Description}" Style="{StaticResource Muted}" Margin="0,0,0,12" />
+                    <TextBlock Visibility="{Binding HasResult, Converter={StaticResource BoolToVisible}}" FontSize="14">
+                        <Run Text="Récupérable :" />
+                        <Run Text="{Binding SizeText, Mode=OneWay}" FontWeight="Bold" />
+                        <Run Text="—" />
+                        <Run Text="{Binding CountText, Mode=OneWay}" />
+                    </TextBlock>
+                    <TextBlock Text="{Binding SkippedText}" Style="{StaticResource Muted}" FontSize="12" Margin="0,4,0,8" />
+                    <TextBlock Text="Plus gros éléments" FontWeight="SemiBold" Margin="0,4,0,4"
+                               Visibility="{Binding HasItems, Converter={StaticResource BoolToVisible}}" />
+                </StackPanel>
+                <ListView ItemsSource="{Binding TopItems}" BorderThickness="0"
+                          Visibility="{Binding HasItems, Converter={StaticResource BoolToVisible}}"
+                          VirtualizingPanel.IsVirtualizing="True">
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn Header="Taille" Width="90">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding SizeBytes, Converter={StaticResource ByteSize}}" />
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn Header="Chemin" Width="520" DisplayMemberBinding="{Binding FullPath}" />
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+            </DockPanel>
+        </Border>
+
+        <!-- Summary after a cleanup / simulation -->
+        <Border Grid.Column="2" Style="{StaticResource Card}"
+                Visibility="{Binding Summary, Converter={StaticResource NotNullToVisible}}">
+            <DockPanel DataContext="{Binding Summary}">
+                <StackPanel DockPanel.Dock="Top">
+                    <TextBlock Text="{Binding Title}" Style="{StaticResource Title}" />
+                    <TextBlock FontSize="15">
+                        <Run Text="{Binding FreedLabel, Mode=OneWay}" />
+                        <Run Text=":" />
+                        <Run Text="{Binding FreedText, Mode=OneWay}" FontWeight="Bold" Foreground="{StaticResource SuccessBrush}" />
+                    </TextBlock>
+                    <TextBlock Text="{Binding ItemsText}" Margin="0,2,0,0" />
+                    <TextBlock Text="{Binding DurationText}" Style="{StaticResource Muted}" FontSize="12" />
+                    <Border Background="{StaticResource AccentLightBrush}" CornerRadius="6" Padding="10,6" Margin="0,8,0,0"
+                            Visibility="{Binding Note, Converter={StaticResource NotNullToVisible}}">
+                        <TextBlock Text="{Binding Note}" TextWrapping="Wrap" />
+                    </Border>
+                    <TextBlock Text="{Binding ErrorsText}" FontWeight="SemiBold" Margin="0,12,0,2" />
+                    <ItemsControl ItemsSource="{Binding ErrorBreakdown}" Margin="8,0,0,6">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" Style="{StaticResource Muted}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+                <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
+                    <Button Content="Exporter le rapport…"
+                            Command="{Binding DataContext.ExportCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                    <Button Content="Fermer"
+                            Command="{Binding DataContext.CloseSummaryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                </StackPanel>
+                <Grid>
+                    <!-- Dry-run: list of files that would be deleted -->
+                    <ListBox ItemsSource="{Binding DryRunEntries}" BorderThickness="0" FontFamily="Consolas" FontSize="12"
+                             VirtualizingPanel.IsVirtualizing="True"
+                             Visibility="{Binding IsDryRun, Converter={StaticResource BoolToVisible}}" />
+                    <!-- Real cleanup: errors -->
+                    <ListView ItemsSource="{Binding Errors}" BorderThickness="0" VirtualizingPanel.IsVirtualizing="True"
+                              Visibility="{Binding IsDryRun, Converter={StaticResource BoolToCollapsed}}">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Header="Raison" Width="190" DisplayMemberBinding="{Binding Kind}" />
+                                <GridViewColumn Header="Chemin" Width="420" DisplayMemberBinding="{Binding Path}" />
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                </Grid>
+            </DockPanel>
+        </Border>
+
+        <!-- Action bar -->
+        <Border Grid.Row="1" Grid.ColumnSpan="3" Style="{StaticResource Card}" Margin="0,12,0,0" Padding="16,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                        <CheckBox Content="Mode simulation (dry-run)" IsChecked="{Binding IsDryRun}"
+                                  IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding ModeText}" Style="{StaticResource Muted}" Margin="12,0,0,0" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <ProgressBar Value="{Binding ProgressValue}" IsIndeterminate="{Binding IsProgressIndeterminate}" Maximum="100" />
+                    <TextBlock Text="{Binding StatusText}" Margin="0,6,0,0" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="Analyser" Style="{StaticResource PrimaryButton}" Command="{Binding AnalyzeCommand}" />
+                    <Button Content="Annuler" Command="{Binding AnalyzeCancelCommand}"
+                            Visibility="{Binding AnalyzeCommand.IsRunning, Converter={StaticResource BoolToVisible}}" />
+                    <Button Content="{Binding CleanButtonText}" Style="{StaticResource DangerButton}" Command="{Binding CleanCommand}" />
+                    <Button Content="Annuler" Command="{Binding CleanCancelCommand}"
+                            Visibility="{Binding CleanCommand.IsRunning, Converter={StaticResource BoolToVisible}}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
