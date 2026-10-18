@@ -1,12 +1,16 @@
+using System.Collections;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Text;
 using System.Diagnostics;
 using System.Globalization;
 using System.Windows.Data;
 using CleanIT.App.Logging;
 using CleanIT.App.Services;
 using CleanIT.Core.Abstractions;
+using CleanIT.Core.Cleaning;
 using CleanIT.Core.DiskAnalysis;
+using CleanIT.Core.Models;
 using CleanIT.Core.Formatting;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -19,7 +23,11 @@ public sealed partial class DiskAnalyzerViewModel : ObservableObject
 {
     private static readonly CultureInfo French = FrenchCulture.Instance;
 
+    private const int MaxListedInDialog = 10;
+
     private readonly DiskAnalyzer _analyzer;
+    private readonly ManualDeletionService _deletionService;
+    private readonly SettingsService _settings;
     private readonly IDialogService _dialogs;
     private readonly ILogger<DiskAnalyzerViewModel> _logger;
 
@@ -28,7 +36,7 @@ public sealed partial class DiskAnalyzerViewModel : ObservableObject
     private string _rootPath;
 
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(AnalyzeCommand), nameof(BrowseCommand))]
+    [NotifyCanExecuteChangedFor(nameof(AnalyzeCommand), nameof(BrowseCommand), nameof(DeleteFilesCommand))]
     private bool _isBusy;
 
     [ObservableProperty]
@@ -48,10 +56,18 @@ public sealed partial class DiskAnalyzerViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(SizeHeader), nameof(DateHeader), nameof(PathHeader))]
     private bool _sortDescending = true;
 
-    public DiskAnalyzerViewModel(DiskAnalyzer analyzer, IEnvironmentInfo environment, IDialogService dialogs, ILogger<DiskAnalyzerViewModel> logger)
+    public DiskAnalyzerViewModel(
+        DiskAnalyzer analyzer,
+        ManualDeletionService deletionService,
+        SettingsService settings,
+        IEnvironmentInfo environment,
+        IDialogService dialogs,
+        ILogger<DiskAnalyzerViewModel> logger)
     {
         ArgumentNullException.ThrowIfNull(environment);
         _analyzer = analyzer;
+        _deletionService = deletionService;
+        _settings = settings;
         _dialogs = dialogs;
         _logger = logger;
         _rootPath = environment.SystemDrive;
@@ -110,6 +126,140 @@ public sealed partial class DiskAnalyzerViewModel : ObservableObject
             LargestFilesView.SortDescriptions.Clear();
             LargestFilesView.SortDescriptions.Add(new SortDescription(
                 SortProperty, SortDescending ? ListSortDirection.Descending : ListSortDirection.Ascending));
+        }
+    }
+
+    private bool CanDeleteFiles(IList? items) => !IsBusy;
+
+    /// <summary>
+    /// Deletes the selected files after an explicit confirmation. Files in system locations,
+    /// excluded by the user, folders and links are refused before the confirmation is shown.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanDeleteFiles))]
+    private async Task DeleteFilesAsync(IList? items)
+    {
+        var selected = items?.OfType<FileEntry>().ToList() ?? [];
+        if (selected.Count == 0)
+        {
+            _dialogs.ShowInfo("Supprimer", "Sélectionnez un ou plusieurs fichiers dans la liste (Ctrl ou Maj pour en choisir plusieurs).");
+            return;
+        }
+
+        var exclusions = _settings.Current.Exclusions;
+        var checks = selected.Select(f => (File: f, Check: _deletionService.Check(f.FullPath, exclusions))).ToList();
+        var allowed = checks.Where(c => c.Check.IsAllowed).Select(c => c.File).ToList();
+        var refused = checks.Where(c => !c.Check.IsAllowed).ToList();
+
+        if (allowed.Count == 0)
+        {
+            _dialogs.ShowError(
+                "Suppression impossible",
+                "Aucun des fichiers sélectionnés ne peut être supprimé :\n\n"
+                + string.Join("\n", refused.Take(MaxListedInDialog).Select(r => $"• {r.File.FullPath}\n   {r.Check.RefusalReason}")));
+            return;
+        }
+
+        var mode = _settings.Current.PermanentDeletion ? CleanupMode.Permanent : CleanupMode.RecycleBin;
+        var message = BuildDeleteConfirmation(allowed, refused, mode, checks.Any(c => c.Check.IsAllowed && c.Check.IsApplicationData));
+        if (!_dialogs.Confirm("Confirmer la suppression", message, isWarning: true, confirmLabel: "Supprimer"))
+        {
+            StatusText = "Suppression annulée : rien n'a été supprimé.";
+            return;
+        }
+
+        _logger.CleanupConfirmed(mode, allowed.Count, allowed.Sum(f => f.SizeBytes));
+        IsBusy = true;
+        StatusText = "Suppression en cours…";
+        try
+        {
+            var result = await _deletionService.DeleteAsync(allowed.Select(f => f.FullPath).ToList(), mode, userConfirmed: true, exclusions);
+            var failed = result.Errors.Select(e => e.FullPath).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            foreach (var file in allowed.Where(f => !failed.Contains(f.FullPath)))
+            {
+                LargestFiles.Remove(file);
+            }
+
+            StatusText = string.Format(
+                French,
+                "{0:N0} fichier(s) supprimé(s), {1}. Les tailles de l'arborescence seront mises à jour à la prochaine analyse.",
+                result.ItemsDeleted,
+                ByteSizeFormatter.Format(result.BytesFreed));
+            ShowDeleteSummary(result);
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException)
+        {
+            _logger.OperationFailed(ex, "manual deletion");
+            StatusText = "La suppression a échoué.";
+            _dialogs.ShowError("Suppression", "La suppression a échoué : " + ex.Message);
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private static string BuildDeleteConfirmation(
+        IReadOnlyList<FileEntry> allowed,
+        IReadOnlyList<(FileEntry File, ManualDeletionCheck Check)> refused,
+        CleanupMode mode,
+        bool touchesApplicationData)
+    {
+        var text = new StringBuilder();
+        text.AppendLine(French, $"Supprimer {allowed.Count} fichier(s) ({ByteSizeFormatter.Format(allowed.Sum(f => f.SizeBytes))}) ?\n");
+        foreach (var file in allowed.Take(MaxListedInDialog))
+        {
+            text.AppendLine(French, $"  • {ByteSizeFormatter.Format(file.SizeBytes)} — {file.FullPath}");
+        }
+
+        if (allowed.Count > MaxListedInDialog)
+        {
+            text.AppendLine(French, $"  … et {allowed.Count - MaxListedInDialog} autre(s)");
+        }
+
+        text.AppendLine();
+        text.AppendLine(mode == CleanupMode.Permanent
+            ? "ATTENTION : les fichiers seront supprimés DÉFINITIVEMENT, sans passer par la corbeille."
+            : "Les fichiers seront envoyés à la corbeille et pourront être restaurés. L'espace ne sera libéré qu'une fois la corbeille vidée.");
+
+        if (touchesApplicationData)
+        {
+            text.AppendLine("\nCertains fichiers se trouvent dans AppData : ils appartiennent à une application, qui pourrait ne plus fonctionner correctement.");
+        }
+
+        if (refused.Count > 0)
+        {
+            text.AppendLine(French, $"\n{refused.Count} fichier(s) sélectionné(s) seront ignorés (emplacement protégé, exclusion ou fichier introuvable).");
+        }
+
+        text.Append("\nVoulez-vous continuer ?");
+        return text.ToString();
+    }
+
+    private void ShowDeleteSummary(CleanupResult result)
+    {
+        var text = new StringBuilder();
+        text.AppendLine(French, $"{result.ItemsDeleted:N0} fichier(s) supprimé(s) — {ByteSizeFormatter.Format(result.BytesFreed)}.");
+        if (result.Mode == CleanupMode.RecycleBin && result.ItemsDeleted > 0)
+        {
+            text.AppendLine("Ils sont dans la corbeille : videz-la pour libérer réellement l'espace.");
+        }
+
+        if (result.Errors.Count > 0)
+        {
+            text.AppendLine(French, $"\n{result.Errors.Count} fichier(s) non supprimé(s) :");
+            foreach (var error in result.Errors.Take(MaxListedInDialog))
+            {
+                text.AppendLine(French, $"• {error.FullPath}\n   {ErrorClassifier.Describe(error.Kind)} — {error.Message}");
+            }
+        }
+
+        if (result.Errors.Count == 0)
+        {
+            _dialogs.ShowInfo("Suppression terminée", text.ToString());
+        }
+        else
+        {
+            _dialogs.ShowError("Suppression terminée avec des erreurs", text.ToString());
         }
     }
 

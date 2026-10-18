@@ -16,4 +16,13 @@ public interface IProtectedPathPolicy
     /// it must not be a drive root, be inside a protected tree, or contain a critical folder.
     /// </summary>
     bool IsSafeCleanupRoot(string root);
+
+    /// <summary>
+    /// Check for a file explicitly picked by the user (disk analyzer): personal folders are allowed,
+    /// system locations, system files and browser secrets are not.
+    /// </summary>
+    bool IsProtectedFromManualDeletion(string fullPath, out string reason);
+
+    /// <summary>True when the path is inside the user's AppData folder.</summary>
+    bool IsInApplicationData(string fullPath);
 }

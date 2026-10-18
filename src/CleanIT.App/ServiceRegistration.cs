@@ -39,6 +39,7 @@ internal static class ServiceRegistration
         services.AddSingleton<ScanEngine>();
         services.AddSingleton<CleanupEngine>();
         services.AddSingleton<DiskAnalyzer>();
+        services.AddSingleton<ManualDeletionService>();
         services.AddSingleton(sp => new SettingsStore(
             sp.GetRequiredService<IFileSystem>(), AppPaths.SettingsFile, sp.GetRequiredService<ILogger<SettingsStore>>()));
 

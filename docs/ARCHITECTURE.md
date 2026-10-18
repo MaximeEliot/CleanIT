@@ -62,6 +62,16 @@ Les chemins réseau, relatifs, avec flux de données alternatifs ou noms courts 
 `%TEMP%` n'est accepté comme exception que s'il ne contient aucun dossier critique (un `TEMP` mal configuré
 vers `C:\Users\Alice` n'ouvre pas le profil).
 
+### Suppression manuelle
+
+`ManualDeletionService` supprime les fichiers sélectionnés dans l'analyseur d'espace. Comme l'utilisateur choisit
+lui-même chaque fichier, il utilise `IsProtectedFromManualDeletion`, plus permissif que `IsProtected` : les dossiers
+personnels sont autorisés, mais les arborescences système (`Windows`, `Program Files`, `ProgramData`, dossiers de
+démarrage et de récupération sur tous les lecteurs), les fichiers système et les secrets des navigateurs restent
+interdits. Il applique aussi les exclusions et refuse les dossiers et les liens. La confirmation et le choix entre
+corbeille et suppression définitive suivent les mêmes règles que le nettoyage. Le nettoyage automatique continue
+d'utiliser la politique stricte (un test le vérifie).
+
 ## Modèle de données principal
 
 | Type | Rôle |

@@ -20,7 +20,7 @@ un analyseur d'espace disque en lecture seule.
 | Onglet | Description |
 |---|---|
 | **Nettoyage** | Catégories cochables, analyse, rapport par catégorie (taille, nombre, plus gros fichiers), confirmation, barre de progression, annulation, résumé final (espace libéré, erreurs) et export du rapport. |
-| **Analyseur d'espace** | Arborescence d'un lecteur ou d'un dossier triée par taille, et les 50 plus gros fichiers. Aucune suppression possible depuis cet onglet. |
+| **Analyseur d'espace** | Arborescence d'un lecteur ou d'un dossier triée par taille, et les 50 plus gros fichiers (triables par taille, date ou chemin). Suppression des fichiers sélectionnés, après confirmation ; les emplacements système restent protégés. |
 | **Paramètres** | Exclusions (dossiers, fichiers, motifs comme `*.docx`), suppression définitive, âge minimal des fichiers temporaires, accès aux journaux. |
 
 Catégories de la V1 :
@@ -42,6 +42,12 @@ Pas de nettoyage du registre en V1.
 
 - **Aucune suppression sans analyse ni confirmation.** Le moteur de nettoyage ne prend en entrée qu'un rapport
   d'analyse et refuse de s'exécuter sans le drapeau de confirmation de l'utilisateur (sauf en simulation).
+- **Confirmation à l'épreuve des fausses manipulations** : la fenêtre de confirmation n'a pas de raccourci clavier,
+  « Annuler » est le choix par défaut (Entrée, Échap) et le bouton de suppression n'est cliquable qu'après une seconde.
+- **Suppression manuelle (analyseur d'espace)** : seuls les fichiers choisis par l'utilisateur, jamais les dossiers ni
+  les liens. Les dossiers personnels sont autorisés, mais `Windows`, `Program Files`, `ProgramData`, les fichiers
+  système (`pagefile.sys`, `hiberfil.sys`, `ntuser.dat`…) et les données sensibles des navigateurs restent interdits.
+  Un avertissement s'affiche pour les fichiers d'`AppData`.
 - **Corbeille par défaut** ; suppression définitive uniquement si elle est activée dans les paramètres, avec un avertissement.
 - **Liste noire codée en dur et testée** (`ProtectedPathPolicy`) : `System32`, `WinSxS`, `Program Files`,
   racines de lecteurs, `C:\Users`, dossiers personnels (Documents, Bureau, Images, Téléchargements, OneDrive…),

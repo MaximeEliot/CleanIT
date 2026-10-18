@@ -89,6 +89,11 @@ public sealed partial class ProtectedPathPolicy : IProtectedPathPolicy
         "databases", "storage",
     };
 
+    /// <summary>Folders under any drive root that manual deletion never touches (in addition to <see cref="AlwaysProtectedDriveFolders"/>).</summary>
+    private static readonly string[] SystemDriveFolders = ["Windows", "ProgramData"];
+
+    private readonly List<string> _systemTrees = [];
+    private readonly string? _applicationData;
     private readonly List<string> _alwaysProtected = [];
     private readonly List<string> _denyByDefault = [];
     private readonly List<string[]> _carveOuts = [];
@@ -103,6 +108,16 @@ public sealed partial class ProtectedPathPolicy : IProtectedPathPolicy
         var programData = Normalize(environment.ProgramData) ?? Path.Combine(systemDrive, "ProgramData");
         var profile = Normalize(environment.UserProfile);
         var localAppData = Normalize(environment.LocalAppData);
+
+        // --- System trees (also enforced for manual deletion) ------------------------------
+        Add(_systemTrees, windows);
+        Add(_systemTrees, programData);
+        Add(_systemTrees, environment.ProgramFiles);
+        Add(_systemTrees, environment.ProgramFilesX86);
+        if (profile is not null)
+        {
+            _applicationData = Path.Combine(profile, "AppData");
+        }
 
         // --- Always protected -------------------------------------------------------------
         foreach (var folder in AlwaysProtectedDriveFolders)
@@ -255,6 +270,69 @@ public sealed partial class ProtectedPathPolicy : IProtectedPathPolicy
 
         reason = string.Empty;
         return false;
+    }
+
+    /// <summary>
+    /// Narrower check used when the user deletes a file they picked themselves (disk analyzer).
+    /// Personal folders (Documents, Downloads, Videos...) are allowed, but system locations,
+    /// Windows system files and browser secrets remain untouchable.
+    /// </summary>
+    public bool IsProtectedFromManualDeletion(string fullPath, out string reason)
+    {
+        var path = PathNormalizer.TryNormalize(fullPath);
+        if (path is null)
+        {
+            reason = "Chemin invalide, relatif ou réseau.";
+            return true;
+        }
+
+        if (PathNormalizer.IsDriveRoot(path))
+        {
+            reason = "Racine de lecteur.";
+            return true;
+        }
+
+        var segments = PathNormalizer.Segments(path);
+        if (segments.Skip(1).Any(s => ShortNameRegex().IsMatch(s)))
+        {
+            reason = "Nom court 8.3 non résolu.";
+            return true;
+        }
+
+        if (ProtectedFileNames.Contains(segments[^1]))
+        {
+            reason = $"Fichier système ou de navigateur protégé « {segments[^1]} ».";
+            return true;
+        }
+
+        if (IsInApplicationData(path) && segments.Skip(1).SkipLast(1).Any(ProtectedDirectoryNames.Contains))
+        {
+            reason = "Données de navigateur protégées.";
+            return true;
+        }
+
+        var drive = segments[0];
+        var systemTrees = _systemTrees
+            .Concat(OnDrive(drive, AlwaysProtectedDriveFolders))
+            .Concat(OnDrive(drive, SystemDriveFolders));
+        foreach (var root in systemTrees)
+        {
+            if (PathNormalizer.IsSameOrUnder(path, root))
+            {
+                reason = $"Dossier système protégé ({root}).";
+                return true;
+            }
+        }
+
+        reason = string.Empty;
+        return false;
+    }
+
+    /// <summary>True when the path is inside the user's AppData (application data: deleting it may break a program).</summary>
+    public bool IsInApplicationData(string fullPath)
+    {
+        var path = PathNormalizer.TryNormalize(fullPath);
+        return path is not null && _applicationData is not null && PathNormalizer.IsStrictlyUnder(path, _applicationData);
     }
 
     /// <summary>
