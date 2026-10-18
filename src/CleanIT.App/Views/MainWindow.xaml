@@ -1,0 +1,39 @@
+<Window x:Class="CleanIT.App.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:CleanIT.App.ViewModels"
+        xmlns:app="clr-namespace:CleanIT.App"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance Type=vm:MainViewModel}"
+        Style="{StaticResource AppWindow}"
+        Title="{Binding Title}"
+        Width="1120" Height="740" MinWidth="860" MinHeight="580"
+        WindowStartupLocation="CenterScreen">
+    <DockPanel>
+        <!-- Header -->
+        <Border DockPanel.Dock="Top" Background="{StaticResource CardBrush}" BorderBrush="{StaticResource BorderBrush}"
+                BorderThickness="0,0,0,1" Padding="20,12">
+            <DockPanel>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="CleanIT" FontSize="22" FontWeight="Bold" Foreground="{StaticResource AccentBrush}" />
+                    <TextBlock Text="Nettoyage de disque" Margin="12,6,0,0" Style="{StaticResource Muted}" />
+                </StackPanel>
+                <Border DockPanel.Dock="Right" HorizontalAlignment="Right" Style="{StaticResource Badge}">
+                    <TextBlock Text="{Binding ElevationText}" FontSize="12" Foreground="{StaticResource WarningBrush}" />
+                </Border>
+            </DockPanel>
+        </Border>
+
+        <!-- Footer -->
+        <Border DockPanel.Dock="Bottom" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Padding="20,6">
+            <TextBlock Style="{StaticResource Muted}" FontSize="11">
+                <Run Text="Journal :" />
+                <Run Text="{x:Static app:AppPaths.LogDirectory}" />
+            </TextBlock>
+        </Border>
+
+        <TabControl x:Name="Tabs" Margin="16,12,16,8" Background="Transparent" BorderThickness="0" />
+    </DockPanel>
+</Window>

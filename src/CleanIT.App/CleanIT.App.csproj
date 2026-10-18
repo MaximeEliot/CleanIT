@@ -28,4 +28,9 @@
     <ProjectReference Include="..\CleanIT.Core\CleanIT.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- WPF projects do not import System.IO implicitly (clash with System.Windows.Shapes.Path in XAML). -->
+    <Using Include="System.IO" />
+  </ItemGroup>
+
 </Project>
